@@ -1,11 +1,21 @@
 # Large dataset files
 data/*.zip
+data/raw/
+data/processed/
 data/indianapolis/
 data/__MACOSX/
 
 # Allow small metadata files (negation pattern)
 !data/*_table.csv
 !data/*.json
+
+# Allow sample data directory (for development)
+!data/samples/
+!data/samples/*.csv
+
+# Allow track metadata directory
+!data/tracks/
+!data/tracks/*
 
 # Python
 __pycache__/
@@ -35,7 +45,8 @@ env/
 
 # Jupyter Notebook
 .ipynb_checkpoints
-*.ipynb
+# Note: We DO commit notebooks for reproducibility
+# *.ipynb
 
 # IDEs
 .vscode/
@@ -57,3 +68,13 @@ Thumbs.db
 *.tmp
 *.log
 .cache/
+
+# Generated outputs
+outputs/
+htmlcov/
+.coverage
+*.coverage
+
+# uv
+.venv/
+uv.lock
