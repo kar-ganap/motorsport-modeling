@@ -12,10 +12,21 @@ from .loaders import (
     validate_data_completeness
 )
 
+from .gps_analysis import (
+    identify_corners_from_gps,
+    get_corner_at_position,
+    extract_corner_telemetry,
+    validate_corner_identification
+)
+
 __all__ = [
     'load_telemetry',
     'load_gps_data',
     'get_available_vehicles',
     'get_available_parameters',
-    'validate_data_completeness'
+    'validate_data_completeness',
+    'identify_corners_from_gps',
+    'get_corner_at_position',
+    'extract_corner_telemetry',
+    'validate_corner_identification'
 ]
