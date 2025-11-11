@@ -4,9 +4,18 @@ Data loading and processing module.
 Provides loaders for telemetry data, lap times, and track metadata.
 """
 
-# Future imports will go here
-# from .loaders import load_telemetry, load_lap_times
-# from .processors import process_telemetry
-# from .validators import validate_telemetry
+from .loaders import (
+    load_telemetry,
+    load_gps_data,
+    get_available_vehicles,
+    get_available_parameters,
+    validate_data_completeness
+)
 
-__all__ = []
+__all__ = [
+    'load_telemetry',
+    'load_gps_data',
+    'get_available_vehicles',
+    'get_available_parameters',
+    'validate_data_completeness'
+]
