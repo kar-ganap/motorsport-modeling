@@ -70,10 +70,9 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = [
     "--verbose",
-    "--cov=motorsport_modeling",
-    "--cov-report=term-missing",
-    "--cov-report=html",
 ]
+# Coverage options (requires pytest-cov):
+# To run with coverage: pytest --cov=motorsport_modeling --cov-report=term-missing --cov-report=html
 
 [tool.coverage.run]
 source = ["src/motorsport_modeling"]
