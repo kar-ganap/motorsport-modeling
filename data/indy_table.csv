@@ -1,0 +1,10 @@
+item,inches,meters
+Circuit Center Line,154536,
+Start Line Offset,0,
+Sector 1 (SF>I1),53712.0,
+Sector 2 (i1>i2),54604.0,
+Sector 3 (i2>i3),46220.0,
+Pit In from SF,134461.0,
+Pit Out from SFP,15545.0,
+Pit In to Pit Out,34072.0,
+

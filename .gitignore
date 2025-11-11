@@ -1,9 +1,11 @@
-# Dataset files
+# Large dataset files
 data/*.zip
-data/*.csv
-data/*.json
 data/indianapolis/
 data/__MACOSX/
+
+# Allow small metadata files (negation pattern)
+!data/*_table.csv
+!data/*.json
 
 # Python
 __pycache__/

@@ -1,0 +1,64 @@
+{
+  "track_id": "indy",
+  "name": "Indianapolis Motor Speedway (Road Course)",
+  "source_doc": "Indy_Circuit_Map.pdf",
+  "version": {
+    "label": "Circuit Sector Map"
+  },
+  "geometry": {
+    "circuit_length_m": 3925.2144,
+    "circuit_length_miles": 2.4399570175953076,
+    "elevation_finish_ft": null,
+    "elevation_finish_m": null,
+    "gps": {
+      "finish": null,
+      "pit_in": null,
+      "pit_out": null
+    }
+  },
+  "timing_model": {
+    "sectors": [
+      {
+        "id": "S1",
+        "from": "SF",
+        "to": "i1",
+        "length_in": 53712.0,
+        "length_m": 1364.0448,
+        "subsplits": []
+      },
+      {
+        "id": "S2",
+        "from": "i1",
+        "to": "i2",
+        "length_in": 54604.0,
+        "length_m": 1386.7216,
+        "subsplits": []
+      },
+      {
+        "id": "S3",
+        "from": "i2",
+        "to": "i3",
+        "length_in": 46220.0,
+        "length_m": 1173.448
+      }
+    ],
+    "intermediates": ["i1", "i2", "i3"],
+    "speed_traps": []
+  },
+  "pit_lane": {
+    "time_at_50kph_s": null,
+    "pit_in_from_sf_in": 134461.0,
+    "pit_in_from_sf_m": 3415.2994,
+    "pit_out_from_sfp_in": 15545.0,
+    "pit_out_from_sfp_m": 394.843,
+    "pit_in_to_pit_out_in": 34072.0,
+    "pit_in_to_pit_out_m": 865.4288
+  },
+  "raw_linear": {
+    "circuit_center_line_in": 154536,
+    "circuit_center_line_m": 3925.2144,
+    "start_line_offset_in": 0,
+    "start_line_offset_m": 0.0
+  }
+}
+
