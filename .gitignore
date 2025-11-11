@@ -7,6 +7,10 @@ data/__MACOSX/
 !data/*_table.csv
 !data/*.json
 
+# Allow sample data directory (for development)
+!data/samples/
+!data/samples/*.csv
+
 # Python
 __pycache__/
 *.py[cod]
