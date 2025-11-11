@@ -87,8 +87,8 @@ def identify_indy_corners(data_file: Path, vehicle: int = 55, laps: list = None)
     print(f"\n4. Identifying corners...")
     corners = identify_corners_from_gps(
         gps_with_speed,
-        min_corners=8,       # Indianapolis has ~10-12 corners
-        max_corners=15,
+        min_corners=10,      # Indianapolis Road Course has 14 corners
+        max_corners=18,      # Allow some tolerance for clustering
         verbose=True
     )
 
@@ -97,8 +97,8 @@ def identify_indy_corners(data_file: Path, vehicle: int = 55, laps: list = None)
     try:
         validate_corner_identification(
             corners,
-            expected_range=(8, 15),
-            track_name="Indianapolis Motor Speedway"
+            expected_range=(12, 18),
+            track_name="Indianapolis Motor Speedway (Road Course)"
         )
         print("   ✅ Validation PASSED")
     except ValueError as e:
