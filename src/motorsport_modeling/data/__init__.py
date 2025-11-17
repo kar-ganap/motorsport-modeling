@@ -14,6 +14,7 @@ from .loaders import (
 
 from .gps_analysis import (
     identify_corners_from_gps,
+    identify_corners_from_brake,
     get_corner_at_position,
     extract_corner_telemetry,
     validate_corner_identification
@@ -26,6 +27,7 @@ __all__ = [
     'get_available_parameters',
     'validate_data_completeness',
     'identify_corners_from_gps',
+    'identify_corners_from_brake',
     'get_corner_at_position',
     'extract_corner_telemetry',
     'validate_corner_identification'

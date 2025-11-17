@@ -406,3 +406,218 @@ def validate_corner_identification(
 
     # All checks passed
     return True
+
+
+def identify_corners_from_brake(
+    gps_data: pd.DataFrame,
+    brake_col: str = 'pbrake_f',
+    lat_col: str = 'latitude',
+    lon_col: str = 'longitude',
+    min_corners: int = 8,
+    max_corners: int = 15,
+    brake_threshold_percentile: float = 60,
+    verbose: bool = False
+) -> pd.DataFrame:
+    """
+    Identify corners from GPS data by clustering brake pressure peaks.
+
+    Corners are detected as locations where brake pressure is locally maximum
+    (braking zones/corner entry). Multiple laps are used to identify consistent
+    corner locations. This is more reliable than speed-based detection when
+    speed data is sparse.
+
+    Parameters
+    ----------
+    gps_data : pd.DataFrame
+        GPS data with columns: latitude, longitude, brake_pressure, lap, vehicle_number
+    brake_col : str, default='pbrake_f'
+        Name of brake pressure column (front brake)
+    lat_col : str, default='latitude'
+        Name of latitude column
+    lon_col : str, default='longitude'
+        Name of longitude column
+    min_corners : int, default=8
+        Minimum expected corners per lap
+    max_corners : int, default=15
+        Maximum expected corners per lap
+    brake_threshold_percentile : float, default=60
+        Only consider brake peaks above this percentile as potential corners
+    verbose : bool, default=False
+        Print progress information
+
+    Returns
+    -------
+    pd.DataFrame
+        Corner locations with columns:
+            - corner_id: Unique corner identifier (1-indexed)
+            - latitude: GPS latitude of corner
+            - longitude: GPS longitude of corner
+            - max_brake: Typical maximum brake pressure at corner
+            - brake_std: Standard deviation of brake pressure
+            - n_observations: Number of laps where corner was detected
+            - corner_type: 'light', 'medium', or 'heavy' based on brake pressure
+
+    Examples
+    --------
+    >>> from motorsport_modeling.data import load_gps_data, load_telemetry
+    >>> gps = load_gps_data('race1.csv', vehicle=55)
+    >>> telemetry = load_telemetry('race1.csv', vehicle=55, parameters=['pbrake_f'])
+    >>> gps_with_brake = gps.merge(telemetry[['timestamp', 'pbrake_f']], on='timestamp')
+    >>> corners = identify_corners_from_brake(gps_with_brake, verbose=True)
+    >>> print(f"Found {len(corners)} corners")
+    """
+    if verbose:
+        print("=" * 60)
+        print("GPS CORNER IDENTIFICATION (BRAKE-BASED)")
+        print("=" * 60)
+        print(f"Input: {len(gps_data):,} GPS points")
+
+    # Ensure we have brake data
+    if brake_col not in gps_data.columns:
+        raise ValueError(f"Brake column '{brake_col}' not found in GPS data")
+
+    # Step 1: Find brake pressure peaks for each lap
+    brake_peaks = []
+
+    laps = gps_data['lap'].unique()
+    if verbose:
+        print(f"Analyzing {len(laps)} laps")
+
+    for lap in laps:
+        lap_data = gps_data[gps_data['lap'] == lap].copy()
+
+        if len(lap_data) < 50:
+            # Not enough data points for this lap
+            continue
+
+        # Sort by timestamp to ensure correct order
+        lap_data = lap_data.sort_values('timestamp')
+
+        # Get brake pressure values
+        brake_pressure = lap_data[brake_col].values
+
+        # Skip if too many NaN values
+        if np.isnan(brake_pressure).sum() > len(brake_pressure) * 0.5:
+            continue
+
+        # Interpolate NaN values
+        brake_pressure = pd.Series(brake_pressure).interpolate().values
+
+        # Only consider high brake pressures
+        brake_threshold = np.percentile(brake_pressure, brake_threshold_percentile)
+
+        # Find peaks in brake pressure
+        # Require minimum distance between peaks (avoid detecting same corner twice)
+        min_distance = len(brake_pressure) // (max_corners * 2)  # Rough estimate
+        peaks, properties = find_peaks(
+            brake_pressure,
+            distance=max(min_distance, 10),
+            prominence=5  # Require at least 5 units brake pressure increase
+        )
+
+        # Filter to only high-pressure peaks
+        high_pressure_peaks = peaks[brake_pressure[peaks] > brake_threshold]
+
+        # Get GPS coordinates at these peaks
+        for peak_idx in high_pressure_peaks:
+            if peak_idx < len(lap_data):
+                row = lap_data.iloc[peak_idx]
+                brake_peaks.append({
+                    'lap': lap,
+                    'latitude': row[lat_col],
+                    'longitude': row[lon_col],
+                    'brake_pressure': row[brake_col],
+                    'vehicle_number': row.get('vehicle_number', None)
+                })
+
+    if len(brake_peaks) == 0:
+        raise ValueError("No brake pressure peaks found. Check data quality.")
+
+    if verbose:
+        print(f"Found {len(brake_peaks)} brake peaks across all laps")
+        print(f"Average: {len(brake_peaks) / len(laps):.1f} per lap")
+
+    # Step 2: Cluster brake peaks by GPS location
+    brake_df = pd.DataFrame(brake_peaks)
+    coords = brake_df[[lat_col, lon_col]].values
+
+    # Use DBSCAN to cluster nearby peaks
+    # eps = 0.0002 degrees ≈ 22 meters (appropriate for circuit racing)
+    eps = 0.0002
+    clustering = DBSCAN(eps=eps, min_samples=max(2, len(laps) // 3)).fit(coords)
+
+    brake_df['cluster'] = clustering.labels_
+
+    # Filter out noise points (cluster = -1)
+    brake_df = brake_df[brake_df['cluster'] >= 0]
+
+    if len(brake_df) == 0:
+        raise ValueError(
+            f"No consistent corners found. All brake peaks were noise. "
+            f"Try adjusting brake_threshold_percentile or eps parameter."
+        )
+
+    # Step 3: Calculate corner statistics for each cluster
+    corners = []
+    cluster_ids = sorted(brake_df['cluster'].unique())
+
+    if verbose:
+        print(f"Clustered into {len(cluster_ids)} unique corners")
+
+    for cluster_id in cluster_ids:
+        cluster_peaks = brake_df[brake_df['cluster'] == cluster_id]
+
+        corner = {
+            'corner_id': len(corners) + 1,  # 1-indexed
+            'latitude': cluster_peaks[lat_col].mean(),
+            'longitude': cluster_peaks[lon_col].mean(),
+            'max_brake': cluster_peaks['brake_pressure'].median(),
+            'brake_std': cluster_peaks['brake_pressure'].std(),
+            'n_observations': len(cluster_peaks)
+        }
+
+        # Classify corner by brake pressure intensity
+        max_brake = corner['max_brake']
+        if max_brake < 30:
+            corner_type = 'light'
+        elif max_brake < 60:
+            corner_type = 'medium'
+        else:
+            corner_type = 'heavy'
+
+        corner['corner_type'] = corner_type
+
+        corners.append(corner)
+
+    corners_df = pd.DataFrame(corners)
+
+    # Step 4: Validate corner count
+    n_corners = len(corners_df)
+
+    if verbose:
+        print("\nCorner Summary:")
+        print(f"  Light braking (<30): {len(corners_df[corners_df['corner_type'] == 'light'])}")
+        print(f"  Medium braking (30-60): {len(corners_df[corners_df['corner_type'] == 'medium'])}")
+        print(f"  Heavy braking (>60): {len(corners_df[corners_df['corner_type'] == 'heavy'])}")
+
+        print("\nCorner Details:")
+        for _, corner in corners_df.iterrows():
+            print(f"  Corner {corner['corner_id']}: {corner['corner_type']:6s} "
+                  f"({corner['max_brake']:.1f} brake) at "
+                  f"({corner['latitude']:.5f}, {corner['longitude']:.5f})")
+
+        print("=" * 60)
+
+    # Warnings for unexpected corner counts
+    if n_corners < min_corners:
+        warnings.warn(
+            f"Found only {n_corners} corners, expected at least {min_corners}. "
+            "Track may have fewer corners or data quality issues."
+        )
+    elif n_corners > max_corners:
+        warnings.warn(
+            f"Found {n_corners} corners, expected at most {max_corners}. "
+            "May need to adjust clustering parameters."
+        )
+
+    return corners_df
