@@ -4,9 +4,22 @@ Performance metrics module.
 Implements quantifiable metrics for driver and vehicle performance analysis.
 """
 
-# Future imports will go here
-# from .consistency import calculate_lap_consistency
-# from .efficiency import calculate_coasting_time
-# from .braking import analyze_braking_performance
+from .tier1 import (
+    calculate_consistency,
+    calculate_coasting_time,
+    analyze_braking_performance,
+    calculate_throttle_timing,
+    calculate_steering_smoothness,
+    calculate_all_tier1_metrics,
+    compare_drivers
+)
 
-__all__ = []
+__all__ = [
+    'calculate_consistency',
+    'calculate_coasting_time',
+    'analyze_braking_performance',
+    'calculate_throttle_timing',
+    'calculate_steering_smoothness',
+    'calculate_all_tier1_metrics',
+    'compare_drivers'
+]
