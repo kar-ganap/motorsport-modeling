@@ -7,6 +7,10 @@ Provides loaders for telemetry data, lap times, and track metadata.
 from .loaders import (
     load_telemetry,
     load_gps_data,
+    load_lap_times,
+    load_weather,
+    get_race_weather_summary,
+    load_endurance_analysis,
     get_available_vehicles,
     get_available_parameters,
     validate_data_completeness
@@ -23,6 +27,10 @@ from .gps_analysis import (
 __all__ = [
     'load_telemetry',
     'load_gps_data',
+    'load_lap_times',
+    'load_weather',
+    'get_race_weather_summary',
+    'load_endurance_analysis',
     'get_available_vehicles',
     'get_available_parameters',
     'validate_data_completeness',

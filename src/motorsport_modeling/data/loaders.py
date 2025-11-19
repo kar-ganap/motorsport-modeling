@@ -8,7 +8,7 @@ CSV files in long format (one row per measurement).
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Dict
 import time
 
 
@@ -188,6 +188,308 @@ def load_gps_data(
 
     if verbose:
         print(f"GPS data: {len(df):,} points")
+
+    return df
+
+
+def load_lap_times(
+    file_path: Union[str, Path],
+    vehicle: Optional[int] = None,
+    max_lap: Optional[int] = None,
+    min_lap_time: float = 60.0,
+    max_lap_time: float = 300.0,
+    verbose: bool = False
+) -> pd.DataFrame:
+    """
+    Load lap time data from CSV file with data quality fixes.
+
+    Handles common data quality issues:
+    - Duplicate timestamps (keeps latest per lap)
+    - Invalid lap numbers (e.g., 32768 sentinel values)
+    - Cool-down laps (filtered via max_lap)
+    - Invalid lap times (filtered via min/max thresholds)
+
+    Parameters
+    ----------
+    file_path : str or Path
+        Path to lap time CSV file
+    vehicle : int, optional
+        Filter by vehicle number
+    max_lap : int, optional
+        Maximum lap number to include (filters out cool-down laps)
+    min_lap_time : float, default=60.0
+        Minimum valid lap time in seconds
+    max_lap_time : float, default=300.0
+        Maximum valid lap time in seconds
+    verbose : bool, default=False
+        Print loading progress and statistics
+
+    Returns
+    -------
+    pd.DataFrame
+        Lap time data with columns:
+        - vehicle_number: int
+        - lap: int
+        - timestamp: datetime
+        - lap_time: float (seconds)
+
+    Notes
+    -----
+    Lap times are calculated as the difference between consecutive lap
+    timestamps for each vehicle. Lap 1 is excluded since there's no
+    prior timestamp to compute a difference from.
+
+    Examples
+    --------
+    >>> # Load all lap times for Race 1 (26 laps)
+    >>> df = load_lap_times('R1_lap_time.csv', max_lap=26)
+
+    >>> # Load lap times for specific vehicle
+    >>> df = load_lap_times('R1_lap_time.csv', vehicle=55, max_lap=26)
+    """
+    if verbose:
+        print(f"Loading lap times from: {file_path}")
+
+    df = pd.read_csv(file_path)
+
+    if verbose:
+        print(f"  Loaded {len(df):,} rows")
+
+    # Handle different column naming schemes
+    # Some files have 'vehicle_number', others only have 'vehicle_id'
+    if 'vehicle_number' not in df.columns and 'vehicle_id' in df.columns:
+        # vehicle_id can be string like "GR86-002-2" - extract number from middle
+        if df['vehicle_id'].dtype == 'object':
+            # Extract number from pattern "GR86-XXX-Y"
+            df['vehicle_number'] = df['vehicle_id'].str.extract(r'-(\d+)-', expand=False)
+            df['vehicle_number'] = pd.to_numeric(df['vehicle_number'], errors='coerce')
+            if verbose:
+                print(f"  Extracted vehicle_number from vehicle_id string")
+        else:
+            df['vehicle_number'] = df['vehicle_id']
+            if verbose:
+                print(f"  Using vehicle_id as vehicle_number")
+
+    # Parse timestamps
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+    # Filter out invalid lap numbers (32768 is a sentinel value)
+    df = df[df['lap'] < 1000].copy()
+
+    # Filter by vehicle if specified
+    if vehicle is not None:
+        df = df[df['vehicle_number'] == vehicle].copy()
+        if verbose:
+            print(f"  Filtered to vehicle #{vehicle}: {len(df):,} rows")
+
+    # Filter to max lap if specified
+    if max_lap is not None:
+        df = df[df['lap'] <= max_lap].copy()
+        if verbose:
+            print(f"  Filtered to laps <= {max_lap}")
+
+    # Remove duplicates (keep last occurrence per lap per vehicle)
+    # Using 'last' because erroneous early timestamps appear first in duplicates
+    df = df.sort_values(['vehicle_number', 'lap', 'timestamp'])
+    df = df.drop_duplicates(subset=['vehicle_number', 'lap'], keep='last')
+
+    # Calculate lap times as diff between consecutive lap timestamps
+    lap_times = []
+
+    for veh in df['vehicle_number'].unique():
+        vehicle_data = df[df['vehicle_number'] == veh].sort_values('lap').copy()
+
+        # Lap time = timestamp of this lap - timestamp of previous lap
+        vehicle_data['lap_time'] = vehicle_data['timestamp'].diff().dt.total_seconds()
+
+        lap_times.append(vehicle_data)
+
+    result = pd.concat(lap_times, ignore_index=True)
+
+    # Remove lap 1 (no prior timestamp to diff from) and invalid times
+    result = result[result['lap'] > 1].copy()
+    result = result[result['lap_time'] > min_lap_time].copy()
+    result = result[result['lap_time'] < max_lap_time].copy()
+
+    if verbose:
+        print(f"  Computed lap times: {len(result):,} valid laps")
+        print(f"  Vehicles: {result['vehicle_number'].nunique()}")
+        print(f"  Lap range: {result['lap'].min()} - {result['lap'].max()}")
+        print(f"  Lap time range: {result['lap_time'].min():.2f}s - {result['lap_time'].max():.2f}s")
+
+    return result[['vehicle_number', 'lap', 'timestamp', 'lap_time']]
+
+
+def load_weather(
+    file_path: Union[str, Path],
+    verbose: bool = False
+) -> pd.DataFrame:
+    """
+    Load weather data for a race.
+
+    Parameters
+    ----------
+    file_path : str or Path
+        Path to weather CSV file (e.g., '26_Weather_Race 1.CSV')
+    verbose : bool, default=False
+        Print loading progress
+
+    Returns
+    -------
+    pd.DataFrame
+        Weather data with columns:
+        - timestamp: datetime
+        - air_temp: float (°C)
+        - track_temp: float (°C)
+        - humidity: float (%)
+        - pressure: float (hPa)
+        - wind_speed: float (m/s)
+        - wind_direction: float (degrees)
+        - rain: int (0 or 1)
+    """
+    if verbose:
+        print(f"Loading weather from: {file_path}")
+
+    df = pd.read_csv(file_path, sep=';')
+
+    # Rename columns for consistency
+    df = df.rename(columns={
+        'TIME_UTC_STR': 'timestamp',
+        'AIR_TEMP': 'air_temp',
+        'TRACK_TEMP': 'track_temp',
+        'HUMIDITY': 'humidity',
+        'PRESSURE': 'pressure',
+        'WIND_SPEED': 'wind_speed',
+        'WIND_DIRECTION': 'wind_direction',
+        'RAIN': 'rain'
+    })
+
+    # Parse timestamp
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+    # Select relevant columns
+    cols = ['timestamp', 'air_temp', 'track_temp', 'humidity',
+            'pressure', 'wind_speed', 'wind_direction', 'rain']
+    df = df[cols]
+
+    if verbose:
+        print(f"  Loaded {len(df)} weather readings")
+        print(f"  Air temp: {df['air_temp'].mean():.1f}°C (mean)")
+        print(f"  Track temp: {df['track_temp'].mean():.1f}°C (mean)")
+
+    return df
+
+
+def get_race_weather_summary(
+    file_path: Union[str, Path],
+    verbose: bool = False
+) -> Dict:
+    """
+    Get summary weather statistics for a race.
+
+    Parameters
+    ----------
+    file_path : str or Path
+        Path to weather CSV file
+    verbose : bool
+        Print summary
+
+    Returns
+    -------
+    dict
+        Dictionary with mean weather values:
+        - air_temp, track_temp, humidity, pressure, wind_speed
+    """
+    df = load_weather(file_path, verbose=False)
+
+    summary = {
+        'air_temp': df['air_temp'].mean(),
+        'track_temp': df['track_temp'].mean(),
+        'humidity': df['humidity'].mean(),
+        'pressure': df['pressure'].mean(),
+        'wind_speed': df['wind_speed'].mean()
+    }
+
+    if verbose:
+        print(f"Weather summary:")
+        print(f"  Air temp: {summary['air_temp']:.1f}°C")
+        print(f"  Track temp: {summary['track_temp']:.1f}°C")
+        print(f"  Humidity: {summary['humidity']:.1f}%")
+
+    return summary
+
+
+def load_endurance_analysis(
+    file_path: Union[str, Path],
+    vehicle: Optional[int] = None,
+    verbose: bool = False
+) -> pd.DataFrame:
+    """
+    Load endurance analysis data with sector times and flag status.
+
+    Parameters
+    ----------
+    file_path : str or Path
+        Path to endurance analysis CSV (e.g., '23_AnalysisEnduranceWithSections_Race 1.CSV')
+    vehicle : int, optional
+        Filter by vehicle number
+    verbose : bool
+        Print loading progress
+
+    Returns
+    -------
+    pd.DataFrame
+        Endurance data with columns:
+        - vehicle_number, lap, lap_time
+        - s1, s2, s3 (sector times in seconds)
+        - kph (average speed)
+        - flag_status (GF=green, FCY=full course yellow, FF=finish)
+        - top_speed
+        - pit_time (if pitted)
+    """
+    if verbose:
+        print(f"Loading endurance analysis from: {file_path}")
+
+    df = pd.read_csv(file_path, sep=';')
+
+    # Strip whitespace from column names (CSV has leading spaces)
+    df.columns = df.columns.str.strip()
+
+    # Rename columns
+    df = df.rename(columns={
+        'NUMBER': 'vehicle_number',
+        'LAP_NUMBER': 'lap',
+        'LAP_TIME': 'lap_time_str',
+        'S1_SECONDS': 's1',
+        'S2_SECONDS': 's2',
+        'S3_SECONDS': 's3',
+        'KPH': 'kph',
+        'FLAG_AT_FL': 'flag_status',
+        'TOP_SPEED': 'top_speed',
+        'PIT_TIME': 'pit_time'
+    })
+
+    # Convert vehicle number to int (handle leading zeros like '03')
+    df['vehicle_number'] = pd.to_numeric(df['vehicle_number'], errors='coerce')
+
+    # Filter by vehicle if specified
+    if vehicle is not None:
+        df = df[df['vehicle_number'] == vehicle].copy()
+
+    # Select relevant columns
+    cols = ['vehicle_number', 'lap', 's1', 's2', 's3', 'kph',
+            'flag_status', 'top_speed', 'pit_time']
+    df = df[[c for c in cols if c in df.columns]]
+
+    # Create is_under_yellow flag
+    if 'flag_status' in df.columns:
+        df['is_under_yellow'] = df['flag_status'].isin(['FCY', 'SC']).astype(int)
+
+    if verbose:
+        print(f"  Loaded {len(df)} lap records")
+        if 'is_under_yellow' in df.columns:
+            yellow_pct = 100 * df['is_under_yellow'].sum() / len(df)
+            print(f"  Under yellow: {yellow_pct:.1f}% of laps")
 
     return df
 
