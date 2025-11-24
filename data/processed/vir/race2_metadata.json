@@ -1,0 +1,26 @@
+{
+  "track": "vir",
+  "race": "race2",
+  "total_laps": 21,
+  "num_drivers": 21,
+  "num_samples": 357,
+  "warmup_laps": [
+    3,
+    5,
+    8,
+    10,
+    15
+  ],
+  "prediction_horizons": [
+    1,
+    2,
+    3,
+    5
+  ],
+  "files": {
+    "features": "race2_features.parquet",
+    "validation": "race2_validation.parquet",
+    "top5": "race2_top5.parquet",
+    "driver_stats": "race2_driver_stats.parquet"
+  }
+}

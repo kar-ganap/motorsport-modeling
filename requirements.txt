@@ -30,3 +30,6 @@ streamlit>=1.28.0
 
 # Data format support
 pyarrow>=14.0.0
+
+# Local package installation
+-e .

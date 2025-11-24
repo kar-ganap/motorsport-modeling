@@ -1,7 +1,7 @@
 # Large dataset files
 data/*.zip
 data/raw/
-data/processed/
+# data/processed/  # Commented out for deploy branch - need processed data in cloud
 data/indianapolis/
 data/__MACOSX/
 

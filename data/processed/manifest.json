@@ -1,0 +1,380 @@
+{
+  "barber": {
+    "race1": {
+      "track": "barber",
+      "race": "race1",
+      "total_laps": 28,
+      "num_drivers": 20,
+      "num_samples": 452,
+      "warmup_laps": [
+        3,
+        5,
+        8,
+        10,
+        15
+      ],
+      "prediction_horizons": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "files": {
+        "features": "race1_features.parquet",
+        "validation": "race1_validation.parquet",
+        "top5": "race1_top5.parquet",
+        "driver_stats": "race1_driver_stats.parquet"
+      }
+    },
+    "race2": {
+      "track": "barber",
+      "race": "race2",
+      "total_laps": 28,
+      "num_drivers": 20,
+      "num_samples": 484,
+      "warmup_laps": [
+        3,
+        5,
+        8,
+        10,
+        15
+      ],
+      "prediction_horizons": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "files": {
+        "features": "race2_features.parquet",
+        "validation": "race2_validation.parquet",
+        "top5": "race2_top5.parquet",
+        "driver_stats": "race2_driver_stats.parquet"
+      }
+    }
+  },
+  "cota": {
+    "race1": {
+      "track": "cota",
+      "race": "race1",
+      "total_laps": 20,
+      "num_drivers": 30,
+      "num_samples": 450,
+      "warmup_laps": [
+        3,
+        5,
+        8,
+        10,
+        15
+      ],
+      "prediction_horizons": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "files": {
+        "features": "race1_features.parquet",
+        "validation": "race1_validation.parquet",
+        "top5": "race1_top5.parquet",
+        "driver_stats": "race1_driver_stats.parquet"
+      }
+    },
+    "race2": {
+      "track": "cota",
+      "race": "race2",
+      "total_laps": 20,
+      "num_drivers": 31,
+      "num_samples": 458,
+      "warmup_laps": [
+        3,
+        5,
+        8,
+        10,
+        15
+      ],
+      "prediction_horizons": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "files": {
+        "features": "race2_features.parquet",
+        "validation": "race2_validation.parquet",
+        "top5": "race2_top5.parquet",
+        "driver_stats": "race2_driver_stats.parquet"
+      }
+    }
+  },
+  "indianapolis": {
+    "race1": {
+      "track": "indianapolis",
+      "race": "race1",
+      "total_laps": 29,
+      "num_drivers": 24,
+      "num_samples": 511,
+      "warmup_laps": [
+        3,
+        5,
+        8,
+        10,
+        15
+      ],
+      "prediction_horizons": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "files": {
+        "features": "race1_features.parquet",
+        "validation": "race1_validation.parquet",
+        "top5": "race1_top5.parquet",
+        "driver_stats": "race1_driver_stats.parquet"
+      }
+    },
+    "race2": {
+      "track": "indianapolis",
+      "race": "race2",
+      "total_laps": 25,
+      "num_drivers": 24,
+      "num_samples": 368,
+      "warmup_laps": [
+        3,
+        5,
+        8,
+        10,
+        15
+      ],
+      "prediction_horizons": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "files": {
+        "features": "race2_features.parquet",
+        "validation": "race2_validation.parquet",
+        "top5": "race2_top5.parquet",
+        "driver_stats": "race2_driver_stats.parquet"
+      }
+    }
+  },
+  "road-america": {
+    "race1": {
+      "track": "road-america",
+      "race": "race1",
+      "total_laps": 7,
+      "num_drivers": 27,
+      "num_samples": 145,
+      "warmup_laps": [
+        3,
+        5,
+        8,
+        10,
+        15
+      ],
+      "prediction_horizons": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "files": {
+        "features": "race1_features.parquet",
+        "validation": "race1_validation.parquet",
+        "top5": "race1_top5.parquet",
+        "driver_stats": "race1_driver_stats.parquet"
+      }
+    },
+    "race2": {
+      "track": "road-america",
+      "race": "race2",
+      "total_laps": 17,
+      "num_drivers": 26,
+      "num_samples": 339,
+      "warmup_laps": [
+        3,
+        5,
+        8,
+        10,
+        15
+      ],
+      "prediction_horizons": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "files": {
+        "features": "race2_features.parquet",
+        "validation": "race2_validation.parquet",
+        "top5": "race2_top5.parquet",
+        "driver_stats": "race2_driver_stats.parquet"
+      }
+    }
+  },
+  "sebring": {
+    "race1": {
+      "track": "sebring",
+      "race": "race1",
+      "total_laps": 20,
+      "num_drivers": 21,
+      "num_samples": 359,
+      "warmup_laps": [
+        3,
+        5,
+        8,
+        10,
+        15
+      ],
+      "prediction_horizons": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "files": {
+        "features": "race1_features.parquet",
+        "validation": "race1_validation.parquet",
+        "top5": "race1_top5.parquet",
+        "driver_stats": "race1_driver_stats.parquet"
+      }
+    },
+    "race2": {
+      "track": "sebring",
+      "race": "race2",
+      "total_laps": 18,
+      "num_drivers": 20,
+      "num_samples": 293,
+      "warmup_laps": [
+        3,
+        5,
+        8,
+        10,
+        15
+      ],
+      "prediction_horizons": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "files": {
+        "features": "race2_features.parquet",
+        "validation": "race2_validation.parquet",
+        "top5": "race2_top5.parquet",
+        "driver_stats": "race2_driver_stats.parquet"
+      }
+    }
+  },
+  "sonoma": {
+    "race1": {
+      "track": "sonoma",
+      "race": "race1",
+      "total_laps": 25,
+      "num_drivers": 31,
+      "num_samples": 529,
+      "warmup_laps": [
+        3,
+        5,
+        8,
+        10,
+        15
+      ],
+      "prediction_horizons": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "files": {
+        "features": "race1_features.parquet",
+        "validation": "race1_validation.parquet",
+        "top5": "race1_top5.parquet",
+        "driver_stats": "race1_driver_stats.parquet"
+      }
+    },
+    "race2": {
+      "track": "sonoma",
+      "race": "race2",
+      "total_laps": 22,
+      "num_drivers": 31,
+      "num_samples": 557,
+      "warmup_laps": [
+        3,
+        5,
+        8,
+        10,
+        15
+      ],
+      "prediction_horizons": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "files": {
+        "features": "race2_features.parquet",
+        "validation": "race2_validation.parquet",
+        "top5": "race2_top5.parquet",
+        "driver_stats": "race2_driver_stats.parquet"
+      }
+    }
+  },
+  "vir": {
+    "race1": {
+      "track": "vir",
+      "race": "race1",
+      "total_laps": 21,
+      "num_drivers": 21,
+      "num_samples": 346,
+      "warmup_laps": [
+        3,
+        5,
+        8,
+        10,
+        15
+      ],
+      "prediction_horizons": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "files": {
+        "features": "race1_features.parquet",
+        "validation": "race1_validation.parquet",
+        "top5": "race1_top5.parquet",
+        "driver_stats": "race1_driver_stats.parquet"
+      }
+    },
+    "race2": {
+      "track": "vir",
+      "race": "race2",
+      "total_laps": 21,
+      "num_drivers": 21,
+      "num_samples": 357,
+      "warmup_laps": [
+        3,
+        5,
+        8,
+        10,
+        15
+      ],
+      "prediction_horizons": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "files": {
+        "features": "race2_features.parquet",
+        "validation": "race2_validation.parquet",
+        "top5": "race2_top5.parquet",
+        "driver_stats": "race2_driver_stats.parquet"
+      }
+    }
+  }
+}
