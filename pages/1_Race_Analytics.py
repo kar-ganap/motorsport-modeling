@@ -1,5 +1,5 @@
 """
-RaceCraft AI Dashboard - Real-time driver coaching for Toyota Gazoo Racing
+RaceIQ Dashboard - Real-time driver coaching for Toyota Gazoo Racing
 
 Redesigned from first principles with clear visual hierarchy:
 1. NOW - Current state (glanceable)
@@ -31,7 +31,7 @@ from motorsport_modeling.models.lap_time_predictor import (
 
 # Page config
 st.set_page_config(
-    page_title="RaceCraft AI",
+    page_title="RaceIQ",
     page_icon="🏎️",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -41,7 +41,6 @@ st.set_page_config(
 st.markdown("""
 <style>
     /* Hide default streamlit elements */
-    #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     .stDeployButton {display:none;}
 
@@ -147,7 +146,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def load_race_data(track="indianapolis", race="race1"):
     """Load and cache race telemetry data."""
     # Navigate to project root (pages/../ = project root)
@@ -243,7 +242,7 @@ def fit_predictor(_race_data, predictor_type="relative"):
     return predictor
 
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def build_profiles(_telemetry, baseline_laps, max_drivers=10):
     """Build and cache driver profiles for top N drivers only."""
     # Get all drivers
@@ -322,7 +321,7 @@ def create_gap_analysis_plot(race_data, selected_driver, current_lap, height=285
         xref="paper", yref="paper",
         x=0.5, y=0.05,
         showarrow=False,
-        font=dict(size=11, color='#475569', family="Inter", weight=600),
+        font=dict(size=11, color='#475569', family="Inter, system-ui, sans-serif", weight=600),
         xanchor='center',
         yanchor='bottom',
         bgcolor='rgba(255,255,255,0.85)',
@@ -782,7 +781,7 @@ def main():
     # Compact header with aggressive white text styling
     st.markdown("""
     <div class='status-header' style='display:flex; justify-content:space-between; align-items:center;'>
-        <h1 style='margin:0; color:#FFFFFF !important; text-shadow: 0 0 2px rgba(0,0,0,0.5);'>RaceCraft AI</h1>
+        <h1 style='margin:0; color:#FFFFFF !important; text-shadow: 0 0 2px rgba(0,0,0,0.5);'>RaceIQ</h1>
         <span style='font-size:32px; color:#FFFFFF !important; text-shadow: 0 0 2px rgba(0,0,0,0.5); font-weight:600;'>Toyota Gazoo Racing</span>
     </div>
     """, unsafe_allow_html=True)
@@ -809,54 +808,84 @@ def main():
             format_func=lambda x: track_display_names.get(x, x),
             index=tracks.index('indianapolis')
         )
-        race = st.selectbox("Race", ["race1", "race2"])
+        race = st.selectbox(
+            "Race",
+            ["race1", "race2"],
+            format_func=lambda x: x.replace('race', 'Race ').title()
+        )
 
-        # Load data
-        with st.spinner("Loading..."):
-            telemetry = load_race_data(track, race)
-            race_data = load_race_features(track, race)
+        # Load lightweight race features immediately (fast - just parquet file)
+        race_data = load_race_features(track, race)
 
-            # Check if data loaded successfully
-            if race_data is None or telemetry is None:
-                st.error(f"⚠️ Could not load data for {track_display_names.get(track, track)} - {race}")
-                st.info("This track/race combination may not have processed features yet. Please select a different track or race.")
-                st.stop()
+        # Check if data loaded successfully
+        if race_data is None:
+            st.error(f"⚠️ Could not load data for {track_display_names.get(track, track)} - {race}")
+            st.info("This track/race combination may not have processed features yet. Please select a different track or race.")
+            st.stop()
 
-            predictor = fit_predictor(race_data, "strategic")
-            baseline_laps = [1, 2, 3, 4, 5]
-            field_profiles = build_profiles(telemetry, baseline_laps)
+        # Fit predictor (fast - just uses race_data)
+        predictor = fit_predictor(race_data, "strategic")
 
-        # Driver selection
-        driver_options = {f"#{p.vehicle_number}": p.vehicle_number for p in field_profiles}
+        # Get available drivers from race_data
+        available_drivers = sorted(race_data['vehicle_number'].unique())
+        driver_options = {f"#{int(d)}": d for d in available_drivers}
         selected_driver_label = st.selectbox("Driver", list(driver_options.keys()))
         selected_driver = driver_options[selected_driver_label]
 
         st.markdown("---")
         sim_speed = st.slider("Sim Speed", 0.5, 3.0, 1.0, 0.5)
+        # Store sim_speed in session state so it's available during simulation loop
+        st.session_state.sim_speed = sim_speed
 
         col1, col2 = st.columns(2)
         start_sim = col1.button("▶ Start", use_container_width=True)
         reset_sim = col2.button("↻ Reset", use_container_width=True)
 
-    # Get selected profile
-    selected_profile = next(
-        (p for p in field_profiles if p.vehicle_number == selected_driver),
-        field_profiles[0]
-    )
-
     # Initialize session state
     if 'current_lap' not in st.session_state or reset_sim:
         st.session_state.current_lap = 5
         st.session_state.alerts = []
-        st.session_state.monitor = StateMonitor(selected_profile)
         st.session_state.running = False
+        st.session_state.telemetry_loaded = False
+        st.session_state.telemetry = None
+        st.session_state.field_profiles = None
+        st.session_state.monitor = None
+        st.session_state.field_monitor = None
 
-    if start_sim:
+    # Lazy load telemetry and profiles when user clicks Start
+    if start_sim and not st.session_state.telemetry_loaded:
+        with st.status("Loading race data...", expanded=True) as status:
+            st.write("📊 Loading telemetry data (247,000 rows, ~90MB)...")
+            st.session_state.telemetry = load_race_data(track, race)
+            st.write("✓ Telemetry loaded successfully")
+
+            st.write("👥 Building driver profiles from baseline laps 1-5...")
+            baseline_laps = [1, 2, 3, 4, 5]
+            st.session_state.field_profiles = build_profiles(st.session_state.telemetry, baseline_laps)
+            st.write(f"✓ Built {len(st.session_state.field_profiles)} driver profiles")
+
+            st.write("🎯 Initializing performance monitors...")
+            selected_profile = next(
+                (p for p in st.session_state.field_profiles if p.vehicle_number == selected_driver),
+                st.session_state.field_profiles[0]
+            )
+            st.session_state.monitor = StateMonitor(selected_profile)
+            st.session_state.field_monitor = FieldMonitor(st.session_state.field_profiles)
+            st.write("✓ Monitors initialized")
+
+            st.session_state.telemetry_loaded = True
+            st.session_state.running = True
+
+            status.update(label="✓ Race data loaded - Ready to simulate!", state="complete", expanded=False)
+
+    if start_sim and st.session_state.telemetry_loaded:
+        # If user clicks Start again while simulation is running, just ensure it's running
         st.session_state.running = True
 
-    field_monitor = FieldMonitor(field_profiles)
-    for lap in range(6, st.session_state.current_lap + 1):
-        field_monitor.process_lap(telemetry, lap)
+    # Use session state data if loaded, otherwise None
+    telemetry = st.session_state.telemetry
+    field_profiles = st.session_state.field_profiles
+    field_monitor = st.session_state.field_monitor
 
     # ================================================================
     # SECTION 1: NOW - Current State
@@ -1004,11 +1033,14 @@ def main():
     # ================================================================
     # SECTION 3: DIAGNOSTICS (Conditional on alerts)
     # ================================================================
-    all_alerts = field_monitor.generate_all_alerts()
-    all_alerts.extend(st.session_state.alerts)
-    driver_alerts = [a for a in all_alerts if a.vehicle_number == selected_driver]
+    if field_monitor is not None:
+        all_alerts = field_monitor.generate_all_alerts()
+        all_alerts.extend(st.session_state.alerts)
+        driver_alerts = [a for a in all_alerts if a.vehicle_number == selected_driver]
+    else:
+        driver_alerts = []
 
-    if driver_alerts:
+    if driver_alerts and st.session_state.telemetry_loaded:
         st.markdown("<h3 style='color:#ef4444;'>⚠️ TECHNIQUE DIAGNOSTICS</h3>", unsafe_allow_html=True)
 
         alert_cols = st.columns(min(len(driver_alerts), 3))
@@ -1049,18 +1081,22 @@ def main():
                 </div>
                 """, unsafe_allow_html=True)
 
+    # Show message if simulation not started
+    if not st.session_state.telemetry_loaded:
+        st.info("👉 Click **▶ Start** in the sidebar to begin the race simulation with live telemetry diagnostics")
+
     # Simulation logic
-    if st.session_state.running and st.session_state.current_lap < 20:
-        time.sleep(2.0 / sim_speed)
+    if st.session_state.running and st.session_state.current_lap < 20 and st.session_state.telemetry_loaded:
+        time.sleep(2.0 / st.session_state.sim_speed)
         st.session_state.current_lap += 1
         lap = st.session_state.current_lap
 
-        state = st.session_state.monitor.process_lap(telemetry, lap)
+        state = st.session_state.monitor.process_lap(st.session_state.telemetry, lap)
         alerts = st.session_state.monitor.generate_alerts()
         st.session_state.alerts.extend(alerts)
 
         st.rerun()
-    elif st.session_state.current_lap >= 20:
+    elif st.session_state.current_lap >= 20 and st.session_state.telemetry_loaded:
         st.session_state.running = False
         st.success("🏁 Race Complete!")
 

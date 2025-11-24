@@ -185,7 +185,7 @@ We started thinking we needed GPS racing lines for every track. Reality: GPS dat
 **Deployment:**
 - uv for dependency management
 - Parquet for compressed analytics storage (~2MB/race vs 500MB CSV)
-- Ready for Streamlit Cloud deployment
+- Local setup with clear instructions for judges
 
 ---
 
@@ -217,9 +217,9 @@ We started thinking we needed GPS racing lines for every track. Reality: GPS dat
 ## What's Next
 
 **Immediate:**
-- Deploy to Streamlit Cloud for public access
 - Create demo video showing real-time coaching in action
 - Add driver comparison view (select 2 drivers, compare profiles side-by-side)
+- Enhance local performance with caching optimizations
 
 **Future Vision:**
 - Real-time data ingestion from live races

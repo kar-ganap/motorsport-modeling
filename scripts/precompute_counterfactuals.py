@@ -52,7 +52,7 @@ def process_race_counterfactuals(track: str, race: str, num_laps: int = 20) -> b
             print('  Proceeding without traffic detection...')
             telemetry = None
 
-        # Extract features
+        # Extract features (positions calculated from lap_times)
         print('Extracting features...')
         features = extract_race_features(lap_times, stint='full', telemetry=telemetry)
         print(f'  Extracted features for {len(features)} drivers')

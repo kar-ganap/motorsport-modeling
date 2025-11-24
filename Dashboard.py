@@ -12,7 +12,7 @@ import streamlit as st
 
 # Page config
 st.set_page_config(
-    page_title="RaceCraft AI",
+    page_title="RaceIQ",
     page_icon="🏎️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -22,7 +22,6 @@ st.set_page_config(
 st.markdown("""
 <style>
     /* Hide default streamlit elements */
-    #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     .stDeployButton {display:none;}
 
@@ -105,14 +104,14 @@ st.markdown("""
 # Hero section
 st.markdown("""
 <div class="hero">
-    <h1>🏎️ RaceCraft AI</h1>
+    <h1>🏎️ RaceIQ</h1>
     <p>Data-driven coaching and strategy for Toyota Gazoo Racing</p>
 </div>
 """, unsafe_allow_html=True)
 
 # Introduction
 st.markdown("""
-Welcome to the RaceCraft AI analytics platform. Use the sidebar to navigate between:
+Welcome to the RaceIQ analytics platform. Use the sidebar to navigate between:
 
 ### 📊 Race Analytics
 Real-time driver coaching with predictive insights:
@@ -120,6 +119,13 @@ Real-time driver coaching with predictive insights:
 - Next-lap performance predictions
 - Driver state monitoring and fatigue detection
 - Actionable coaching messages
+
+### 🔍 Race Insights
+Post-race strategic analysis:
+- Beat-the-driver-ahead comparative analysis
+- Counterfactual "what-if" scenarios
+- AI-powered race narratives and recommendations
+- Visual performance breakdowns
 
 ### 🎯 Model Validation
 Comprehensive model performance analysis:
@@ -162,6 +168,7 @@ st.markdown("---")
 st.markdown("### 🚀 Getting Started")
 st.info("""
 1. Navigate to **Race Analytics** from the sidebar to view real-time race coaching
-2. Use **Model Validation** to explore prediction accuracy and model performance
-3. Select different tracks and races to compare performance across events
+2. Explore **Race Insights** for post-race analysis and strategic recommendations
+3. Use **Model Validation** to explore prediction accuracy and model performance
+4. Select different tracks and races to compare performance across events
 """)

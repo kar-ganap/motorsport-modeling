@@ -49,10 +49,24 @@ def compute_race_positions(
     df = df.sort_values(['vehicle_number', 'lap'])
     df['cumulative_time'] = df.groupby('vehicle_number')['lap_time'].cumsum()
 
-    # Calculate position at each lap based on timestamp
-    # Earlier timestamp = earlier crossing = better position
-    # This reflects actual race position when cars cross the finish line
-    df['position'] = df.groupby('lap')['timestamp'].rank(method='first').astype(int)
+    # Calculate position at each lap considering drivers who completed different lap counts
+    # Drivers who complete more laps finish ahead of those who complete fewer laps
+    # Among drivers on the same lap, earlier timestamp = better position
+    max_laps_per_driver = df.groupby('vehicle_number')['lap'].max()
+    df['max_lap_completed'] = df['vehicle_number'].map(max_laps_per_driver)
+
+    # For each lap, rank by: (1) max laps completed (DESC), (2) timestamp (ASC)
+    # This ensures drivers who DNF early are ranked behind those who continue
+    df['position'] = df.groupby('lap').apply(
+        lambda x: x.assign(
+            position=x[['max_lap_completed', 'timestamp']].apply(
+                lambda row: (-row['max_lap_completed'], row['timestamp']), axis=1
+            ).rank(method='first')
+        )['position']
+    ).reset_index(level=0, drop=True).astype(int)
+
+    # Clean up temporary column
+    df = df.drop(columns=['max_lap_completed'])
 
     if verbose:
         # Show final positions (last lap for each vehicle)

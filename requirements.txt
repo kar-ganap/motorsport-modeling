@@ -1,4 +1,4 @@
-# RaceIQ - Streamlit Cloud Deployment Requirements
+# RaceIQ - Local Development Requirements
 # Generated for Toyota Gazoo Racing Hack the Track 2025
 
 # Core data processing
@@ -25,7 +25,7 @@ tqdm>=4.66.0
 streamlit>=1.28.0
 
 # LLM integration (optional - only needed if using AI narratives)
-# Note: Set OPENAI_API_KEY in Streamlit secrets if using this
+# Note: Set OPENAI_API_KEY in environment if using this
 # openai>=1.0.0
 
 # Data format support
