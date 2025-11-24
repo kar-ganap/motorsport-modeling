@@ -1,0 +1,26 @@
+{
+  "track": "indianapolis",
+  "race": "race1",
+  "total_laps": 29,
+  "num_drivers": 24,
+  "num_samples": 511,
+  "warmup_laps": [
+    3,
+    5,
+    8,
+    10,
+    15
+  ],
+  "prediction_horizons": [
+    1,
+    2,
+    3,
+    5
+  ],
+  "files": {
+    "features": "race1_features.parquet",
+    "validation": "race1_validation.parquet",
+    "top5": "race1_top5.parquet",
+    "driver_stats": "race1_driver_stats.parquet"
+  }
+}

@@ -55,7 +55,16 @@ track_display_names = {
 }
 
 with col1:
-    tracks = sorted([d.name for d in Path('data/raw/tracks').iterdir() if d.is_dir()])
+    # Load manifest to get available tracks
+    manifest_path = Path('data/processed/manifest.json')
+    if manifest_path.exists():
+        import json
+        with open(manifest_path) as f:
+            manifest = json.load(f)
+        tracks = sorted(manifest.keys())
+    else:
+        tracks = []
+
     selected_track = st.selectbox(
         "Track",
         tracks,
@@ -64,7 +73,12 @@ with col1:
     )
 
 with col2:
-    races = sorted([d.name for d in Path(f'data/raw/tracks/{selected_track}').iterdir() if d.is_dir()])
+    # Get races for selected track from manifest
+    if manifest_path.exists() and selected_track in manifest:
+        races = sorted(manifest[selected_track].keys())
+    else:
+        races = []
+
     selected_race = st.selectbox(
         "Race",
         races,
