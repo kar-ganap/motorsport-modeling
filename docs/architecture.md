@@ -242,7 +242,7 @@ flowchart TD
     ITERATE --> AHEAD{Who finished<br/>directly ahead?}
 
     AHEAD -->|P1| P2[Compare to P2<br/>Why we won]
-    AHEAD -->|Other| PN[Compare to P(N-1)<br/>Why we lost]
+    AHEAD -->|Other| PN[Compare to driver ahead<br/>Why we lost]
 
     P2 --> ANALYZE[Analyze differences]
     PN --> ANALYZE

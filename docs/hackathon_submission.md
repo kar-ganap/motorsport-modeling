@@ -63,7 +63,7 @@ These aren't guesses—they're validated predictions with measurable position ch
 **Deployment:**
 - uv for dependency management
 - Parquet for compressed analytics storage (~2MB/race vs 500MB CSV)
-- Ready for Streamlit Cloud deployment
+- Local setup with clear instructions for judges
 
 ## Challenges we ran into
 
@@ -180,9 +180,9 @@ We started thinking we needed GPS racing lines for every track. Reality: GPS dat
 ## What's next for RaceIQ
 
 **Immediate:**
-- Deploy to Streamlit Cloud for public access
 - Create demo video showing real-time coaching in action
 - Add driver comparison view (select 2 drivers, compare profiles side-by-side)
+- Enhance local performance with caching optimizations
 
 **Future Vision:**
 - Real-time data ingestion from live races

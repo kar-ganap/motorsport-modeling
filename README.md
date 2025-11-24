@@ -5,6 +5,86 @@
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+---
+
+## 🎯 FOR JUDGES - QUICK START (5 Minutes)
+
+This application runs **locally on your machine** to provide full access to the Race Analytics engine with real-time telemetry visualization.
+
+### Prerequisites
+- Python 3.11 or higher
+- ~2GB disk space for data
+- macOS, Linux, or Windows
+
+### Setup Steps
+
+**1. Install uv** (fast Python package manager):
+```bash
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows (PowerShell)
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+**2. Clone this repository**:
+```bash
+git clone https://github.com/kar-ganap/toyota-motorsport-analysis.git
+cd toyota-motorsport-analysis
+```
+
+**3. Set up Python environment**:
+```bash
+uv venv --python 3.11
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+uv pip install -e ".[dev,app,ml]"
+```
+
+**4. Download race data**:
+- Visit: https://trddev.com/hackathon-2025/
+- Download the GR Cup telemetry dataset
+- Extract and place contents in `data/raw/tracks/` to match this structure:
+  ```
+  data/raw/tracks/
+  ├── indianapolis/
+  │   ├── race1/
+  │   └── race2/
+  ├── cota/
+  │   ├── race1/
+  │   └── race2/
+  └── ... (all other tracks)
+  ```
+
+**5. Launch the dashboard**:
+```bash
+streamlit run Dashboard.py
+```
+
+The app will automatically open at **http://localhost:8501**
+
+### What to Explore
+
+1. **🏁 Race Analytics** (Main Feature):
+   - Real-time lap-by-lap coaching system
+   - Full telemetry visualization (speed, throttle, brake, G-forces)
+   - Performance analysis with actionable recommendations
+
+2. **📊 Race Insights**:
+   - Compare drivers across tracks
+   - Identify performance patterns
+   - Explore race dynamics
+
+3. **ℹ️ About**:
+   - Technical details and methodology
+
+### Troubleshooting
+
+- **Import errors**: Ensure you ran `uv pip install -e ".[dev,app,ml]"`
+- **Data not found**: Verify `data/raw/tracks/` directory structure matches step 4
+- **Port in use**: Run `streamlit run Home.py --server.port 8502`
+
+---
+
 ## Overview
 
 RaceCraft AI is a comprehensive motorsport analytics platform that combines predictive modeling with prescriptive coaching insights. Built for the [Toyota Gazoo Racing Hack the Track](https://hack-the-track.devpost.com/) hackathon.
@@ -51,7 +131,7 @@ data/samples/indy_telemetry_sample.csv
 ```
 
 **Full dataset:**
-Download from the [Hack the Track](https://hack-the-track.devpost.com/) website and place in `data/raw/`.
+Download from https://trddev.com/hackathon-2025/ and place in `data/raw/tracks/`.
 
 ## Project Structure
 
