@@ -83,7 +83,8 @@ def extract_representative_sample(zip_path, output_dir='data/samples', sample_si
         if 'vehicle_number' in chunk.columns and 'lap' in chunk.columns:
             # Stratified sample by vehicle and lap
             sampled = chunk.groupby(['vehicle_number', 'lap'], group_keys=False).apply(
-                lambda x: x.sample(min(len(x), max(1, target_samples_per_chunk // 50)))
+                lambda x: x.sample(min(len(x), max(1, target_samples_per_chunk // 50))),
+                include_groups=False
             )
         else:
             # Simple random sample
