@@ -1,0 +1,32 @@
+# RaceIQ - Streamlit Cloud Deployment Requirements
+# Generated for Toyota Gazoo Racing Hack the Track 2025
+
+# Core data processing
+pandas>=2.1.0
+numpy>=1.24.0
+scipy>=1.11.0
+
+# Machine learning
+scikit-learn>=1.3.0
+xgboost>=2.0.0
+
+# Visualization
+matplotlib>=3.8.0
+seaborn>=0.13.0
+plotly>=5.17.0
+
+# Geospatial (for GPS data)
+shapely>=2.0.0
+
+# Progress bars and utilities
+tqdm>=4.66.0
+
+# Streamlit dashboard
+streamlit>=1.28.0
+
+# LLM integration (optional - only needed if using AI narratives)
+# Note: Set OPENAI_API_KEY in Streamlit secrets if using this
+# openai>=1.0.0
+
+# Data format support
+pyarrow>=14.0.0
