@@ -1,37 +1,37 @@
-# RaceIQ: From "Push Harder" to Actionable Insights
+# RaceIQ: Turning Data Into Winning Seconds
 
 ## Inspiration
 
-**0.17 seconds.** That's what separated the winner from the runner-up at Indianapolis in the GR Cup series.
+**0.17 seconds.** That's what separated P1 from P2 at Indianapolis in the GR Cup series.
 
-Professional race coaches today face a paradox: they have gigabytes of high-resolution telemetry data streaming from every car, but when it comes to giving feedback, they're stuck with vague advice like "push harder" or "find more time in the corners." The data exists. The insights don't.
+Professional race coaches have gigabytes of high-resolution telemetry streaming from every car, but when giving feedback they're stuck with vague advice: "push harder," "find more time in the corners." The data exists. The insights don't.
 
-We built RaceIQ to change this: a system that transforms raw telemetry into specific, quantified, actionable coaching—because a professional driver doesn't need to be told to try harder. They need to know *exactly* what's costing them positions and *exactly* how many seconds they can gain by fixing it.
+RaceIQ solves this: transforming raw telemetry into specific, quantified, actionable coaching. A professional driver doesn't need to be told to try harder—they need to know *exactly* what's costing them positions and *exactly* how many seconds they can gain by fixing it.
 
 ## What it does
 
-RaceIQ is a **data-driven race engineering platform** that answers three critical questions coaches face:
+RaceIQ is a **data-driven race engineering platform** answering three critical questions coaches face:
 
 ### 1. "Why did I lose to the driver ahead of me?"
 
-Traditional race analysis compares drivers to field averages. That's statistically interesting but strategically useless. If you finished P5, you don't care about being 0.3s/lap slower than the median—**you care about the 2.1 seconds you lost to P4**.
+Traditional analysis compares drivers to field averages. That's statistically interesting but strategically useless. If you finished P5, you don't care about being 0.3s/lap slower than the median—**you care about the 2.1 seconds you lost to P4**.
 
-**Beat-the-Driver-Ahead Analysis** compares every driver to the specific person directly ahead of them in the results. The question changes from "How did the race go?" to **"What one thing cost me this position?"**
+**Beat-the-Driver-Ahead Analysis** compares every driver to the specific person directly ahead in results. The question changes from "How did the race go?" to **"What one thing cost me this position?"**
 
-> Example: In typical mid-pack battles observed across our dataset, drivers finishing P10 lose to P9 by 10-20 seconds primarily through tire degradation. Analysis reveals pace deltas increasing from +0.1-0.2s/lap early race to +0.7-1.0s/lap in late stints, with degradation accounting for 8-12 seconds of total gap—validating the critical importance of tire management for position gains.
+> Example: In typical mid-pack battles (P9 vs P10), drivers lose positions primarily through tire degradation. Analysis reveals pace deltas increasing from +0.1-0.2s/lap early race to +0.7-1.0s/lap in late stints, with degradation accounting for 8-12 seconds of total gap.
 
 ### 2. "Is this driver fatiguing, or is this just how they drive?"
 
-We discovered that performance metrics naturally partition into two categories:
+We discovered performance metrics naturally partition into two categories:
 
 - **Profile Metrics**: Define a driver's baseline skill (traction management, throttle discipline). Used for long-term development.
 - **State Metrics**: Detect real-time changes during a race (fatigue, degradation). Used for live coaching alerts.
 
-RaceIQ builds a driver profile from laps 1-5, then monitors for deviations during the race—alerting when state degrades beyond normal variance.
+RaceIQ builds a driver profile from laps 1-5, then monitors for deviations—alerting when state degrades beyond normal variance.
 
 ### 3. "What if we had better tire management? Would we have gained positions?"
 
-Post-race debriefs often devolve into speculation. We made this concrete with **Counterfactual Analysis**: machine learning models that predict final positions under different scenarios:
+Post-race debriefs devolve into speculation. We made this concrete with **Counterfactual Analysis**: machine learning models predicting final positions under different scenarios:
 
 - What if you matched top-5 tire degradation? → Predicted P8 (gain 2 positions)
 - What if you matched median consistency? → Predicted P9 (gain 1 position)
@@ -45,7 +45,7 @@ These aren't guesses—they're validated predictions with measurable position ch
 
 **Data Processing:**
 - Analyzed 14 races (7 tracks × 2 races) from the GR Cup dataset
-- Processed ~14.5 million raw telemetry samples per race (throttle, brake, G-forces, speed, steering)
+- Processed ~247,000 raw telemetry samples per race (throttle, brake, G-forces, speed, steering)
 - Built adaptive data loader handling 3 different format variations across tracks
 - Linear regression for degradation modeling, gradient boosting for position prediction
 
@@ -69,10 +69,10 @@ These aren't guesses—they're validated predictions with measurable position ch
 
 ### Challenge 1: When Your Metrics Lie to You
 
-**The Problem:** We implemented what seemed like standard telemetry metrics—brake smoothness, throttle timing—and validated them against lap times. Result: **2 of 4 metrics had the WRONG correlation direction**.
+**The Problem:** We implemented standard telemetry metrics—brake smoothness, throttle timing—and validated them against lap times. Result: **2 of 4 metrics had the WRONG correlation direction**.
 
-- **Brake oscillations**: We assumed smooth braking = fast. Wrong. Fast drivers showed *more* oscillations because of aggressive trail braking.
-- **Throttle timing**: We assumed faster throttle application = better. Wrong. Progressive throttle application is actually faster.
+- **Brake oscillations**: We assumed smooth = fast. Wrong. Fast drivers showed *more* oscillations due to aggressive trail braking.
+- **Throttle timing**: We assumed faster throttle application = better. Wrong. Progressive application is actually faster.
 
 **The Fix:** Deep dive into F1 telemetry papers, OptimumG research, and RACER magazine revealed validated patterns:
 - **Lift-off count**: Number of throttle decreases during acceleration (wheelspin indicator)
@@ -87,12 +87,11 @@ These aren't guesses—they're validated predictions with measurable position ch
 
 **The Investigation:** We ran variance analysis on all metrics:
 
-```python
-# Within-driver variance: How much does this metric change for one driver?
-# Cross-driver variance: How different are drivers from each other?
-
-lift_off_count: cross/within ratio = 1.66 (stable within driver, differentiates across)
-brake_cv:       cross/within ratio = 0.48 (varies within driver, similar across)
+```
+Metric          Cross/Within Ratio  Interpretation
+---------------------------------------------------------
+lift_off_count  1.66               PROFILE (stable within driver)
+brake_cv        0.48               STATE (varies within driver)
 ```
 
 **The Insight:** These aren't broken metrics—they're measuring different things:
@@ -108,7 +107,7 @@ This wasn't our original design—it *emerged from the data*. We restructured th
 **The Hunt:** After systematic debugging, we found it:
 
 ```python
-# THE BUG (in feature_engineering.py):
+# THE BUG:
 df['rolling_avg_3'] = x.rolling(window=3, min_periods=1).mean()
 # ☝️ This includes the CURRENT lap in the rolling average!
 
@@ -120,7 +119,7 @@ df['rolling_avg_3'] = x.shift(1).rolling(window=3, min_periods=1).mean()
 df['prev_lap_time'] = df['prev_lap_time']  # Leave NaN for first lap
 ```
 
-**Additional Discovery:** Even after fixing leakage, absolute lap time prediction remained poor (RMSE ~6s). Root cause: race events (yellow flags, restarts) cause 40-50 second variations that affect all drivers equally and can't be predicted from prior laps.
+**Additional Discovery:** Even after fixing leakage, absolute lap time prediction remained poor (RMSE ~6s). Root cause: race events (yellow flags, restarts) cause 40-50 second variations affecting all drivers equally.
 
 **The Pivot:** Switch from predicting `lap_time` to predicting `relative_performance = lap_time - field_median`. This normalizes out race events.
 

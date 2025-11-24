@@ -288,7 +288,8 @@ def extract_driver_features(
 def extract_race_features(
     race_data: pd.DataFrame,
     stint: str = 'full',
-    telemetry: pd.DataFrame = None
+    telemetry: pd.DataFrame = None,
+    analytics_data: pd.DataFrame = None
 ) -> pd.DataFrame:
     """
     Extract features for all drivers in a race.
@@ -297,19 +298,41 @@ def extract_race_features(
         race_data: Full race data (lap times)
         stint: Which stint to analyze
         telemetry: Optional telemetry data for GPS-based traffic detection
+        analytics_data: Optional analytics DataFrame with corrected positions
 
     Returns:
         DataFrame with one row per driver and feature columns
     """
-    # First, calculate final positions from total race time
-    # This is needed because lap_times data doesn't include position column
+    # Always calculate fallback positions first (this is the most reliable method)
+    # Get max laps completed per driver
+    max_laps_per_driver = race_data.groupby('vehicle_number')['lap'].max().reset_index()
+    max_laps_per_driver.columns = ['vehicle_number', 'max_laps']
+
+    # Get total time per driver
     total_times = race_data.groupby('vehicle_number')['lap_time'].sum().reset_index()
     total_times.columns = ['vehicle_number', 'total_time']
-    total_times = total_times.sort_values('total_time')
-    total_times['final_position'] = range(1, len(total_times) + 1)
 
-    # Create a lookup dict
-    position_lookup = dict(zip(total_times['vehicle_number'], total_times['final_position']))
+    # Merge and sort by: (1) max laps DESC, (2) total time ASC
+    standings = max_laps_per_driver.merge(total_times, on='vehicle_number')
+    standings = standings.sort_values(
+        ['max_laps', 'total_time'],
+        ascending=[False, True]
+    )
+    standings['final_position'] = range(1, len(standings) + 1)
+
+    # Create a lookup dict from calculated positions
+    position_lookup = dict(zip(standings['vehicle_number'], standings['final_position']))
+
+    # If analytics data is provided, override positions for drivers that exist in analytics
+    # (but keep fallback for drivers not in analytics)
+    if analytics_data is not None:
+        final_lap = analytics_data['lap'].max()
+        analytics_final = analytics_data[analytics_data['lap'] == final_lap][['vehicle_number', 'position']]
+        analytics_positions = dict(zip(analytics_final['vehicle_number'], analytics_final['position']))
+
+        # Update position_lookup with analytics positions (only for drivers that exist in analytics)
+        for veh_num, pos in analytics_positions.items():
+            position_lookup[veh_num] = pos
 
     features = []
 
@@ -317,7 +340,7 @@ def extract_race_features(
         try:
             driver_features = extract_driver_features(driver_num, race_data, stint, telemetry)
             driver_features['vehicle_number'] = driver_num
-            # Override final_position with calculated value
+            # Override final_position with looked-up value (from analytics if available, fallback otherwise)
             driver_features['final_position'] = position_lookup.get(driver_num, 0)
             features.append(driver_features)
         except Exception as e:

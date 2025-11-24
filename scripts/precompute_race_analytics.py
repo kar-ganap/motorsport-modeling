@@ -84,25 +84,36 @@ def process_race(track: str, race: str) -> bool:
         track_dir = RAW_DATA_DIR / track / race
         total_laps = TRACK_METADATA[track][race]
 
-        # Find lap time file
-        lap_time_files = list(track_dir.glob("*lap_time*.csv"))
-        if not lap_time_files:
-            print(f"  ✗ No lap time file found")
-            return False
+        # Use telemetry_loader (same as counterfactuals) instead of feature_engineering
+        from motorsport_modeling.data.telemetry_loader import load_lap_times as tl_load_lap_times
 
-        # Find endurance file
-        endurance_file = find_endurance_file(track_dir, race)
+        print(f"  Loading lap times from telemetry_loader...")
+        lap_times = tl_load_lap_times(track_dir)
 
-        # Use the existing prepare_race_features function
-        print(f"  Generating features using prepare_race_features...")
-        race_data = prepare_race_features(
-            lap_time_file=lap_time_files[0],
-            total_laps=total_laps,
-            endurance_file=endurance_file,
-            verbose=False
+        # Calculate positions using the same logic as counterfactuals (extract_race_features)
+        print(f"  Computing positions...")
+        max_laps_per_driver = lap_times.groupby('vehicle_number')['lap'].max().reset_index()
+        max_laps_per_driver.columns = ['vehicle_number', 'max_laps']
+
+        total_times = lap_times.groupby('vehicle_number')['lap_time'].sum().reset_index()
+        total_times.columns = ['vehicle_number', 'total_time']
+
+        standings = max_laps_per_driver.merge(total_times, on='vehicle_number')
+        standings = standings.sort_values(['max_laps', 'total_time'], ascending=[False, True])
+        standings['final_position'] = range(1, len(standings) + 1)
+
+        # Merge positions back to lap_times
+        race_data = lap_times.merge(
+            standings[['vehicle_number', 'final_position']],
+            on='vehicle_number',
+            how='left'
         )
-        print(f"  Generated {len(race_data)} rows")
+
+        print(f"  Generated {len(race_data)} rows for {race_data['vehicle_number'].nunique()} drivers")
         print(f"  Laps: {race_data['lap'].min()} to {race_data['lap'].max()}")
+
+        # Find endurance file for sector data
+        endurance_file = find_endurance_file(track_dir, race)
 
         # Check if sectors are already included
         has_sectors = all(col in race_data.columns for col in ['s1', 's2', 's3'])

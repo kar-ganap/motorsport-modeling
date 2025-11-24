@@ -43,17 +43,7 @@ uv pip install -e ".[dev,app,ml]"
 **4. Download race data**:
 - Visit: https://trddev.com/hackathon-2025/
 - Download the GR Cup telemetry dataset
-- Extract and place contents in `data/raw/tracks/` to match this structure:
-  ```
-  data/raw/tracks/
-  ├── indianapolis/
-  │   ├── race1/
-  │   └── race2/
-  ├── cota/
-  │   ├── race1/
-  │   └── race2/
-  └── ... (all other tracks)
-  ```
+- See detailed extraction instructions below in "Raw Data Structure"
 
 **5. Launch the dashboard**:
 ```bash
@@ -131,7 +121,212 @@ data/samples/indy_telemetry_sample.csv
 ```
 
 **Full dataset:**
-Download from https://trddev.com/hackathon-2025/ and place in `data/raw/tracks/`.
+Download from https://trddev.com/hackathon-2025/ and see "Raw Data Structure" section below for detailed extraction instructions.
+
+## Raw Data Structure
+
+### Overview
+
+The GR Cup dataset contains telemetry and timing data for 7 tracks with 2 races each (14 total races). The data is provided as ZIP archives that must be extracted into a specific directory structure for the application to work correctly.
+
+### Required Directory Structure
+
+Extract all downloaded data into `data/raw/tracks/` following this structure:
+
+```
+data/raw/tracks/
+├── barber/
+│   ├── race1/
+│   │   ├── R1_barber_telemetry_data.csv          (REQUIRED - ~1.5GB)
+│   │   ├── R1_barber_lap_time.csv                (REQUIRED)
+│   │   ├── R1_barber_lap_start.csv               (REQUIRED)
+│   │   ├── R1_barber_lap_end.csv                 (REQUIRED)
+│   │   ├── 03_*.CSV                              (Optional - race results)
+│   │   ├── 23_AnalysisEnduranceWithSections_*.CSV (Optional - analytics)
+│   │   ├── 26_Weather_*.CSV                      (Optional - weather)
+│   │   └── 99_Best 10 Laps By Driver_*.CSV       (Optional - best laps)
+│   └── race2/
+│       └── [same file structure as race1]
+│
+├── cota/
+│   ├── race1/
+│   │   ├── R1_cota_telemetry_data.csv
+│   │   ├── COTA_lap_time_R1.csv
+│   │   ├── COTA_lap_start_time_R1.csv
+│   │   └── COTA_lap_end_time_R1.csv
+│   └── race2/
+│       └── [same file structure as race1]
+│
+├── indianapolis/
+│   ├── race1/
+│   │   ├── R1_indianapolis_motor_speedway_telemetry.csv  (REQUIRED - ~3GB, includes GPS)
+│   │   ├── R1_indianapolis_motor_speedway_lap_time.csv   (REQUIRED)
+│   │   ├── R1_indianapolis_motor_speedway_lap_start.csv  (REQUIRED)
+│   │   ├── R1_indianapolis_motor_speedway_lap_end.csv    (REQUIRED)
+│   │   └── [optional analytics files]
+│   └── race2/
+│       └── [same file structure as race1]
+│
+├── road-america/
+│   ├── race1/
+│   │   ├── R1_road_america_telemetry_data.csv
+│   │   ├── road_america_lap_time_R1.csv
+│   │   ├── road_america_lap_start_R1.csv
+│   │   └── road_america_lap_end_R1.csv
+│   └── race2/
+│       └── [same file structure as race1]
+│
+├── sebring/
+│   ├── race1/
+│   │   ├── sebring_telemetry_R1.csv
+│   │   ├── sebring_lap_time_R1.csv
+│   │   ├── sebring_lap_start_time_R1.csv
+│   │   └── sebring_lap_end_time_R1.csv
+│   └── race2/
+│       └── [same file structure as race1]
+│
+├── sonoma/
+│   ├── race1/
+│   │   ├── R1_sonoma_telemetry_data.csv
+│   │   ├── sonoma_lap_time_R1.csv
+│   │   ├── sonoma_lap_start_time_R1.csv
+│   │   └── sonoma_lap_end_time_R1.csv
+│   └── race2/
+│       └── [same file structure as race1]
+│
+└── vir/
+    ├── race1/
+    │   ├── R1_VIR_telemetry_data.csv
+    │   ├── vir_lap_time_R1.csv
+    │   ├── vir_lap_start_R1.csv
+    │   └── vir_lap_end_R1.csv
+    └── race2/
+        └── [same file structure as race1]
+```
+
+### Step-by-Step Extraction Instructions
+
+1. **Download all race data** from https://trddev.com/hackathon-2025/
+   - You should have 14 ZIP files (7 tracks × 2 races)
+
+2. **Create the base directory** (if it doesn't exist):
+   ```bash
+   mkdir -p data/raw/tracks
+   ```
+
+3. **For each track** (e.g., `indianapolis`):
+   ```bash
+   # Create track directory
+   mkdir -p data/raw/tracks/indianapolis/race1
+   mkdir -p data/raw/tracks/indianapolis/race2
+   ```
+
+4. **Extract ZIP contents**:
+   ```bash
+   # Example for Indianapolis Race 1
+   unzip R1_indianapolis_telemetry.zip -d data/raw/tracks/indianapolis/race1/
+
+   # Example for Indianapolis Race 2
+   unzip R2_indianapolis_telemetry.zip -d data/raw/tracks/indianapolis/race2/
+   ```
+
+5. **Repeat for all tracks**:
+   - barber (race1, race2)
+   - cota (race1, race2)
+   - indianapolis (race1, race2)
+   - road-america (race1, race2)
+   - sebring (race1, race2)
+   - sonoma (race1, race2)
+   - vir (race1, race2)
+
+### File Types and Importance
+
+#### Required Files (4 per race):
+
+1. **Telemetry CSV** (`*_telemetry*.csv` or `*_telemetry_data.csv`)
+   - High-frequency sensor data (~247,000 samples per race)
+   - Contains: speed, throttle, brake, G-forces, steering angle, GPS (some tracks only)
+   - Size: 1.5-3GB per race
+   - **Critical for all analysis**
+
+2. **Lap Times CSV** (`*_lap_time*.csv`)
+   - Lap-by-lap timing data for all drivers
+   - Contains: vehicle_number, lap, lap_time, position
+   - Size: ~50-90KB
+   - **Critical for Race Insights**
+
+3. **Lap Start Times CSV** (`*_lap_start*.csv`)
+   - Timestamp when each lap begins
+   - Used for time-syncing telemetry with lap numbers
+   - Size: ~50-90KB
+   - **Critical for telemetry alignment**
+
+4. **Lap End Times CSV** (`*_lap_end*.csv`)
+   - Timestamp when each lap completes
+   - Used for lap boundary detection
+   - Size: ~50-90KB
+   - **Critical for telemetry alignment**
+
+#### Optional Files (analytics metadata):
+
+- `03_*.CSV` - Official race results
+- `23_AnalysisEnduranceWithSections_*.CSV` - Sector-level analytics
+- `26_Weather_*.CSV` - Weather conditions
+- `99_Best 10 Laps By Driver_*.CSV` - Best lap summary
+
+These files are used by the system when available but are not required for core functionality.
+
+### Track-Specific Notes
+
+**Indianapolis & COTA**: Include GPS data (latitude, longitude) in telemetry - enables racing line visualization
+
+**Barber, Road America, Sebring, Sonoma, VIR**: No GPS data - analysis focuses on telemetry-based metrics only
+
+**Sebring**: JSON format with lap 32768 corruption bug - automatically filtered by data loader
+
+### Verification
+
+After extraction, verify your structure:
+
+```bash
+# Check that all 14 race directories exist
+ls data/raw/tracks/*/race*
+
+# Should output:
+# data/raw/tracks/barber/race1
+# data/raw/tracks/barber/race2
+# data/raw/tracks/cota/race1
+# data/raw/tracks/cota/race2
+# ... (14 total)
+
+# Check required files for one race
+ls data/raw/tracks/indianapolis/race1/*telemetry*.csv
+ls data/raw/tracks/indianapolis/race1/*lap_time*.csv
+ls data/raw/tracks/indianapolis/race1/*lap_start*.csv
+ls data/raw/tracks/indianapolis/race1/*lap_end*.csv
+```
+
+All four commands should return existing files. If any are missing, re-extract that race's ZIP file.
+
+### Disk Space Requirements
+
+- **Full dataset**: ~20-25GB (all 14 races)
+- **Single race**: ~1.5-3GB (telemetry files are largest)
+- **Processed data**: ~2MB per race (generated automatically by dashboard)
+
+### Troubleshooting
+
+**"Data not found" errors**:
+- Verify directory names match exactly (lowercase, hyphens not underscores)
+- Ensure files are in `data/raw/tracks/<track>/race1/` not `data/raw/tracks/<track>/race1/<track>/`
+
+**"No telemetry data" warnings**:
+- Check that telemetry CSV files are present and not empty
+- File names vary by track - loader auto-detects format
+
+**"Missing GPS data" warnings**:
+- Normal for most tracks - only Indianapolis and COTA have GPS
+- Dashboard will skip GPS-based visualizations automatically
 
 ## Project Structure
 
