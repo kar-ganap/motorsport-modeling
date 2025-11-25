@@ -447,16 +447,4 @@ Our approach: Lap-by-lap race replay with predictive analytics, technique monito
 
 MIT License - See LICENSE file for details
 
-## Acknowledgments
 
-- Toyota Gazoo Racing for providing the race data
-- GR Cup Series teams and drivers
-- Hack the Track hackathon organizers
-
-## Contact
-
-For questions or collaboration: [Your contact info]
-
----
-
-**Built with ❤️ for motorsport analytics**
