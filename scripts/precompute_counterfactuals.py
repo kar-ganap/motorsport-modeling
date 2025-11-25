@@ -38,12 +38,27 @@ def process_race_counterfactuals(track: str, race: str, num_laps: int = 20) -> b
     print('='*70)
 
     try:
-        # Load data
-        print('Loading race data...')
-        lap_times = load_lap_times(data_dir)
+        # Load data from analytics file (same source as comparative analysis)
+        print('Loading race data from analytics file...')
+        analytics_file = Path('data/processed') / track / f'{race}_analytics.parquet'
+
+        if not analytics_file.exists():
+            print(f'  ERROR: Analytics file not found: {analytics_file}')
+            print(f'  Please run precompute_race_analytics.py first')
+            return False
+
+        analytics_data = pd.read_parquet(analytics_file)
+        print(f'  Loaded {len(analytics_data)} rows from analytics')
+
+        # Convert analytics data to lap_times format for feature extraction
+        # Group by driver and lap, take last row (has complete lap data)
+        lap_times = analytics_data.groupby(['vehicle_number', 'lap']).last().reset_index()
+        lap_times = lap_times[['vehicle_number', 'lap', 'lap_time', 'timestamp', 'position']]
+        print(f'  Converted to lap_times format: {len(lap_times)} laps')
 
         # Load telemetry for traffic detection
         print('Loading telemetry...')
+        data_dir = Path(f'data/raw/tracks/{track}/{race}')
         try:
             telemetry = load_telemetry(data_dir, laps=list(range(1, num_laps + 1)),
                                       pivot_to_wide=True, verbose=False)
@@ -52,7 +67,7 @@ def process_race_counterfactuals(track: str, race: str, num_laps: int = 20) -> b
             print('  Proceeding without traffic detection...')
             telemetry = None
 
-        # Extract features (positions calculated from lap_times)
+        # Extract features (positions now from analytics file)
         print('Extracting features...')
         features = extract_race_features(lap_times, stint='full', telemetry=telemetry)
         print(f'  Extracted features for {len(features)} drivers (including DNFs)')
