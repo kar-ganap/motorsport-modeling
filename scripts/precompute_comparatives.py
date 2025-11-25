@@ -57,12 +57,13 @@ def process_race(track: str, race: str) -> bool:
         benchmarks = FieldBenchmark(race_data)
         print(f"  Computed field benchmarks")
 
-        # Get all drivers and their final positions
-        final_lap = race_data['lap'].max()
-        final_standings = race_data[race_data['lap'] == final_lap].sort_values('position')
-        drivers = final_standings['vehicle_number'].unique()
+        # Get all drivers using their maximum completed lap (includes DNFs)
+        # Group by driver and get their last lap data
+        last_lap_data = race_data.loc[race_data.groupby('vehicle_number')['lap'].idxmax()]
+        last_lap_data = last_lap_data.sort_values('position')
+        drivers = last_lap_data['vehicle_number'].unique()
 
-        print(f"  Found {len(drivers)} drivers")
+        print(f"  Found {len(drivers)} drivers (including DNFs)")
 
         # Compute metrics and generate narratives for each driver
         comparative_data = []

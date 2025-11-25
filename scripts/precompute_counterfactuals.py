@@ -55,9 +55,13 @@ def process_race_counterfactuals(track: str, race: str, num_laps: int = 20) -> b
         # Extract features (positions calculated from lap_times)
         print('Extracting features...')
         features = extract_race_features(lap_times, stint='full', telemetry=telemetry)
-        print(f'  Extracted features for {len(features)} drivers')
+        print(f'  Extracted features for {len(features)} drivers (including DNFs)')
 
-        if len(features) < 10:
+        # Use ALL drivers from feature extraction (including DNFs)
+        # This matches the comparative analysis approach
+        print(f'  Using all {len(features)} drivers (including DNFs)')
+
+        if len(features) < 5:
             print(f'  Warning: Only {len(features)} drivers - may not have enough data for model')
             print('  Skipping this race...')
             return False
